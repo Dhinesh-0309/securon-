@@ -1,0 +1,21 @@
+# Terraform artifacts
+.terraform/
+*.tfstate
+*.tfstate.*
+*.out
+plan.out
+plan.json
+crash.log
+.terraform.lock.hcl
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Logs / reports
+scanner/scan_report.json
+scanner/test_plans/*.json
+scanner/__pycache__/
+
+# System files
+.DS_Store
