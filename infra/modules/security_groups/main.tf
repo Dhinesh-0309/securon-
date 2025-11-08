@@ -8,7 +8,7 @@ resource "aws_security_group" "alb_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["128.12.3.0/16"]
+    cidr_blocks = ["192.168.1.0/24"]
   }
 
   egress {
