@@ -1,0 +1,27 @@
+{
+  "summary": {
+    "total_resources": 20,
+    "total_findings": 3,
+    "blocking_findings": 1
+  },
+  "findings": [
+    {
+      "resource": "module.s3.aws_s3_bucket_server_side_encryption_configuration.encryption",
+      "rule_id": "S3-NO-ENCRYPTION",
+      "message": "S3 bucket missing encryption configuration",
+      "severity": "warn"
+    },
+    {
+      "resource": "module.security_groups.aws_security_group.alb_sg",
+      "rule_id": "SG-OPEN-HTTP",
+      "message": "Security group allows HTTP from 0.0.0.0/0",
+      "severity": "warn"
+    },
+    {
+      "resource": "module.security_groups.aws_security_group.ec2_sg",
+      "rule_id": "SG-OPEN-SSH",
+      "message": "Security group allows SSH from 0.0.0.0/0",
+      "severity": "block"
+    }
+  ]
+}

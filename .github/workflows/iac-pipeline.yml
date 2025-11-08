@@ -1,0 +1,128 @@
+name: Securon IaC Pipeline (Simulated Deploy)
+
+# run on push to main and PRs
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'infra/**'
+      - 'scanner/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'infra/**'
+      - 'scanner/**'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan (offline)
+    runs-on: ubuntu-latest
+    outputs:
+      plan-path: ${{ steps.export.outputs.plan_path }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      - name: Ensure Python exists
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Init Terraform (backend disabled)
+        working-directory: infra
+        run: |
+          rm -rf .terraform .terraform.lock.hcl || true
+          terraform init -backend=false
+
+      - name: Terraform plan -> JSON
+        working-directory: infra
+        id: export
+        run: |
+          set -e
+          terraform plan -out=plan.out -input=false
+          terraform show -json plan.out > ../plan.json
+          echo "::set-output name=plan_path::${{ github.workspace }}/plan.json"
+
+      - name: Upload plan.json (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-json
+          path: plan.json
+
+  scanner:
+    name: Static IaC Scanner (Securon)
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies (none required by default)
+        run: |
+          python -m pip install --upgrade pip || true
+
+      - name: Run Securon scanner
+        id: run-scanner
+        run: |
+          set -o pipefail
+          python3 scanner/scanner.py --plan plan.json --rules scanner/rules.json --report scanner/scan_report.json || exit_code=$? && echo "SCANNER_EXIT=$exit_code" > scanner/exitcode.env || true
+          # capture exit code if any (scanner exits 1 on blocking)
+          if [ -f scanner/exitcode.env ]; then
+            source scanner/exitcode.env
+            if [ "${SCANNER_EXIT:-0}" != "0" ]; then
+              echo "Scanner detected blocking findings (exit=${SCANNER_EXIT}). Failing job."
+              cat scanner/scan_report.json || true
+              exit ${SCANNER_EXIT}
+            fi
+          fi
+          echo "Scanner passed."
+
+      - name: Upload scan report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-report
+          path: scanner/scan_report.json
+
+  deploy-simulate:
+    name: Deploy (Simulated)
+    runs-on: ubuntu-latest
+    needs: scanner
+    if: ${{ success() }}   # only runs if previous jobs succeeded
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: |
+          chmod +x scripts/deploy_simulate.sh
+
+      - name: Simulate deployment
+        id: deploy
+        run: |
+          ./scripts/deploy_simulate.sh ./deployment_status.txt
+
+      - name: Show deployment status
+        run: |
+          echo "===== DEPLOYMENT STATUS ====="
+          cat deployment_status.txt || true
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-status
+          path: deployment_status.txt

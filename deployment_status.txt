@@ -1,0 +1,6 @@
+Securon Deployment Simulation
+-----------------------------
+Status: DEPLOYED (SIMULATED)
+Deployed at: 2025-11-08T09:38:20Z
+Deployed by: GitHub Actions
+Notes: This is a simulated deployment artifact (no real AWS calls were made).

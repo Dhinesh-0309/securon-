@@ -1,0 +1,7 @@
+aws_region     = "us-east-1"
+aws_profile    = "default"
+project        = "securon"
+ec2_key_name   = "test-key"
+db_username    = "admin"
+db_password    = "SuperSecurePass123"
+s3_bucket_name = "securon-project-storage"

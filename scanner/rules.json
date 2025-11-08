@@ -1,0 +1,46 @@
+{
+  "rules": [
+    {
+      "id": "SG-OPEN-SSH",
+      "resource": "aws_security_group",
+      "operator": "sg_ingress_open_to_any_port",
+      "port": 22,
+      "severity": "block",
+      "message": "Security group allows SSH from 0.0.0.0/0"
+    },
+    {
+      "id": "SG-OPEN-HTTP",
+      "resource": "aws_security_group",
+      "operator": "sg_ingress_open_to_any_port",
+      "port": 80,
+      "severity": "warn",
+      "message": "Security group allows HTTP from 0.0.0.0/0"
+    },
+    {
+      "id": "S3-PUBLIC-ACL",
+      "resource": "aws_s3_bucket",
+      "operator": "equals",
+      "field": "acl",
+      "value": "public-read",
+      "severity": "block",
+      "message": "S3 bucket ACL is public"
+    },
+    {
+      "id": "RDS-PUBLIC",
+      "resource": "aws_db_instance",
+      "operator": "equals",
+      "field": "publicly_accessible",
+      "value": true,
+      "severity": "block",
+      "message": "RDS instance is publicly accessible"
+    },
+    {
+      "id": "S3-NO-ENCRYPTION",
+      "resource": "aws_s3_bucket_server_side_encryption_configuration",
+      "operator": "missing_or_false",
+      "field": "rule.apply_server_side_encryption_by_default.sse_algorithm",
+      "severity": "warn",
+      "message": "S3 bucket missing encryption configuration"
+    }
+  ]
+}
