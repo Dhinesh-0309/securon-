@@ -12,7 +12,7 @@
       "id": "SG-OPEN-HTTP",
       "resource": "aws_security_group",
       "operator": "sg_ingress_open_to_any_port",
-      "port": 80,
+      "port": 8080,
       "severity": "warn",
       "message": "Security group allows HTTP from 0.0.0.0/0"
     },
